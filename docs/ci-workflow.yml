@@ -1,0 +1,40 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: flowboard
+          POSTGRES_PASSWORD: flowboard
+          POSTGRES_DB: flowboard_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U flowboard -d flowboard_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+    env:
+      DATABASE_URL: postgresql://flowboard:flowboard@localhost:5432/flowboard_test
+      TEST_DATABASE_URL: postgresql://flowboard:flowboard@localhost:5432/flowboard_test
+      JWT_ACCESS_SECRET: ci-access-secret-change-me-please-32bytes
+      JWT_REFRESH_SECRET: ci-refresh-secret-change-me-please-32b
+      NODE_ENV: test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build -w @flowboard/shared
+      - run: npx prisma generate --schema apps/api/prisma/schema.prisma
+      - run: npm test
+      - run: npm run build -w @flowboard/web

@@ -1,0 +1,34 @@
+{
+  "name": "flowboard",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Multi-tenant project management platform",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "npm run build -w @flowboard/shared && concurrently -n api,web -c cyan,magenta \"npm run dev -w @flowboard/api\" \"npm run dev -w @flowboard/web\"",
+    "build": "npm run build -w @flowboard/shared && npm run build -w @flowboard/web && npm run typecheck -w @flowboard/api",
+    "test": "npm run build -w @flowboard/shared && npm run test -w @flowboard/api && npm run test -w @flowboard/web",
+    "typecheck": "npm run build -w @flowboard/shared && npm run typecheck -w @flowboard/api && npm run typecheck -w @flowboard/web",
+    "db:generate": "npm run db:generate -w @flowboard/api",
+    "db:migrate": "npm run db:migrate -w @flowboard/api",
+    "db:seed": "npm run db:seed -w @flowboard/api",
+    "db:setup": "npm run db:migrate -w @flowboard/api && npm run db:seed -w @flowboard/api"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "allowScripts": {
+    "@prisma/client@6.19.3": true,
+    "@prisma/engines@6.19.3": true,
+    "bcrypt@6.0.0": true,
+    "esbuild@0.28.2": true,
+    "msgpackr-extract@3.0.7": true,
+    "prisma@6.19.3": true
+  }
+}

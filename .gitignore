@@ -1,0 +1,15 @@
+node_modules
+dist
+coverage
+.env
+.env.local
+*.log
+.DS_Store
+uploads
+apps/api/uploads
+apps/web/dist
+packages/shared/dist
+.prisma
+*.tsbuildinfo
+playwright-report
+test-results

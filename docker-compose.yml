@@ -1,0 +1,66 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: flowboard
+      POSTGRES_PASSWORD: flowboard
+      POSTGRES_DB: flowboard
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./docker/init-test-db.sql:/docker-entrypoint-initdb.d/init-test-db.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U flowboard -d flowboard"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+  mailpit:
+    image: axllent/mailpit:v1.21
+    ports:
+      - "8025:8025"
+      - "1025:1025"
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    environment:
+      NODE_ENV: development
+      API_PORT: 4000
+      DATABASE_URL: postgresql://flowboard:flowboard@postgres:5432/flowboard
+      WEB_ORIGIN: http://localhost:8080
+      APP_URL: http://localhost:8080
+      JWT_ACCESS_SECRET: dev-only-access-secret-change-me-please-32b
+      JWT_REFRESH_SECRET: dev-only-refresh-secret-change-me-please-32
+      SMTP_HOST: mailpit
+      SMTP_PORT: 1025
+      JOBS_DRIVER: bullmq
+      REDIS_URL: redis://redis:6379
+      STORAGE_DRIVER: local
+    ports:
+      - "4000:4000"
+    volumes:
+      - uploads:/app/apps/api/uploads
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    ports:
+      - "8080:80"
+    depends_on:
+      - api
+
+volumes:
+  pgdata:
+  uploads:
